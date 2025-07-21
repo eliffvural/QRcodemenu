@@ -28,3 +28,11 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => {
     console.error('MongoDB bağlantı hatası:', err.message);
   });
+
+
+// app.js içinde
+const productRoutes = require("./routes/productRoutes");
+
+// sonra bu satırı ekle
+app.use("/api/products", productRoutes);
+
