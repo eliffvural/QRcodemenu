@@ -9,6 +9,7 @@ const productRoutes = require('./routes/productRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const authRoutes = require('./routes/authRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/restaurants/:restaurantId/orders', orderRoutes);
+app.use('/api/ai', aiRoutes);
 
 // MongoDB bağlantısı
 mongoose.connect(process.env.MONGO_URI, { dbName: process.env.MONGO_DB || undefined })
