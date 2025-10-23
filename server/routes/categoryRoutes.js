@@ -2,28 +2,24 @@
 
 const express = require("express");
 const router = express.Router();
-const Category = require("../models/Category");
+const categoryController = require("../controllers/categoryController");
+
+// Hazır kategorileri oluştur (POST) - sadece bir kez çalıştırılmalı
+router.post("/initialize-predefined", categoryController.initializePredefinedCategories);
+
+// Hazır kategorileri getir (GET)
+router.get("/predefined", categoryController.getPredefinedCategories);
+
+// Özel kategorileri getir (GET)
+router.get("/custom", categoryController.getCustomCategories);
 
 // Kategori oluştur (POST)
-router.post("/", async (req, res) => {
-  try {
-    const { name } = req.body;
-    const category = new Category({ name });
-    await category.save();
-    res.status(201).json(category);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+router.post("/", categoryController.createCategory);
 
 // Tüm kategorileri al (GET)
-router.get("/", async (req, res) => {
-  try {
-    const categories = await Category.find().sort({ createdAt: -1 });
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+router.get("/", categoryController.getAllCategories);
+
+// Kategori sil (DELETE)
+router.delete("/:id", categoryController.deleteCategory);
 
 module.exports = router;

@@ -9,6 +9,14 @@ const categorySchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    isPredefined: {
+      type: Boolean,
+      default: false,
+    },
+    icon: {
+      type: String,
+      default: '🍽️', // Varsayılan emoji ikonu
+    }
   },
   { timestamps: true }
 );
