@@ -1,0 +1,9 @@
+# API Sunucusu için
+Flask
+Flask-Cors
+
+# Veri işleme ve ML için
+pandas
+numpy
+scikit-learn
+joblib
