@@ -1,0 +1,14 @@
+{
+  "name": "qr-menu-system",
+  "version": "1.0.0",
+  "description": "QR Kod Menü Sistemi",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd server && npm run dev",
+    "start": "cd server && npm start",
+    "install-server": "cd server && npm install"
+  },
+  "keywords": ["qr-code", "menu", "restaurant"],
+  "author": "",
+  "license": "ISC"
+} 
