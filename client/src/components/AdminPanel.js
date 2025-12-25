@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Check, Plus, QrCode, Save, Trash2, X } from 'lucide-react';
+import { Check, Plus, QrCode, Save, Trash2, X, AlertCircle, RefreshCw, Activity } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import './AdminPanel.css';
 
@@ -56,10 +56,22 @@ function AdminPanel() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedCoverImage, setSelectedCoverImage] = useState(null);
+  
+  // AI Service states
+  const [aiStatus, setAiStatus] = useState(null);
+  const [aiStatusLoading, setAiStatusLoading] = useState(false);
+  const [aiErrors, setAiErrors] = useState([]);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // AI tab açıldığında durumu kontrol et
+  useEffect(() => {
+    if (activeTab === 'ai') {
+      checkAIStatus();
+    }
+  }, [activeTab]);
 
   const fetchData = async () => {
     try {
@@ -316,6 +328,65 @@ function AdminPanel() {
     }
   };
 
+  // AI Servis durumunu kontrol et
+  const checkAIStatus = async () => {
+    setAiStatusLoading(true);
+    try {
+      const response = await axios.get('/api/ai/status');
+      setAiStatus(response.data);
+      
+      // Hata varsa hatalar listesine ekle
+      if (response.data.status === 'offline' || response.data.status === 'unknown') {
+        const errorEntry = {
+          timestamp: new Date().toLocaleString('tr-TR'),
+          message: response.data.message,
+          error: response.data.error || 'Bilinmeyen hata',
+          status: response.data.status
+        };
+        setAiErrors(prev => [errorEntry, ...prev.slice(0, 9)]); // Son 10 hatayı tut
+      } else {
+        // Başarılı durumda hataları temizle (opsiyonel)
+        // setAiErrors([]);
+      }
+    } catch (error) {
+      const errorEntry = {
+        timestamp: new Date().toLocaleString('tr-TR'),
+        message: 'AI servis durumu kontrol edilemedi',
+        error: error.response?.data?.error || error.message,
+        status: 'error'
+      };
+      setAiStatus({
+        status: 'error',
+        message: 'Durum kontrol edilemedi',
+        error: error.message
+      });
+      setAiErrors(prev => [errorEntry, ...prev.slice(0, 9)]);
+    } finally {
+      setAiStatusLoading(false);
+    }
+  };
+
+  // Test önerisi al
+  const testRecommendation = async () => {
+    try {
+      const response = await axios.post('/api/ai/recommendations', {
+        user_id: 'test_user_123',
+        restaurant_id: restaurant?._id,
+        context: {}
+      });
+      alert('Test başarılı! Öneriler: ' + (response.data.recommendations?.length || 0) + ' ürün');
+    } catch (error) {
+      const errorEntry = {
+        timestamp: new Date().toLocaleString('tr-TR'),
+        message: 'Test önerisi alınamadı',
+        error: error.response?.data?.error || error.message,
+        status: 'error'
+      };
+      setAiErrors(prev => [errorEntry, ...prev.slice(0, 9)]);
+      alert('Test hatası: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
   if (loading) {
     return <div className="loading">Yükleniyor...</div>;
   }
@@ -350,6 +421,12 @@ function AdminPanel() {
             onClick={() => setActiveTab('qr')}
           >
             QR Kod
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ai')}
+          >
+            AI Servis
           </button>
         </div>
 
@@ -555,6 +632,110 @@ function AdminPanel() {
                 <h3>QR Kodunuz</h3>
                 <img src={qrCode} alt="QR Code" className="qr-code" />
                 <p>Bu QR kodu müşterilerinize gösterin.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI Servis Tab */}
+        {activeTab === 'ai' && (
+          <div className="tab-content">
+            <div className="section-header">
+              <h2>AI Servis Durumu</h2>
+              <button 
+                className="btn btn-secondary"
+                onClick={checkAIStatus}
+                disabled={aiStatusLoading}
+              >
+                <RefreshCw size={16} className={aiStatusLoading ? 'spinning' : ''} />
+                {aiStatusLoading ? 'Kontrol Ediliyor...' : 'Yenile'}
+              </button>
+            </div>
+
+            {/* Durum Kartı */}
+            <div className="ai-status-card">
+              {aiStatusLoading ? (
+                <div className="ai-status-loading">
+                  <Activity size={24} className="spinning" />
+                  <p>Durum kontrol ediliyor...</p>
+                </div>
+              ) : aiStatus ? (
+                <div className={`ai-status-info ${aiStatus.status}`}>
+                  <div className="ai-status-header">
+                    <Activity 
+                      size={24} 
+                      className={aiStatus.status === 'online' ? 'status-online' : 'status-offline'} 
+                    />
+                    <div>
+                      <h3>
+                        {aiStatus.status === 'online' ? '✅ Çalışıyor' : 
+                         aiStatus.status === 'offline' ? '❌ Çalışmıyor' : 
+                         '⚠️ Durum Belirsiz'}
+                      </h3>
+                      <p className="ai-status-message">{aiStatus.message}</p>
+                    </div>
+                  </div>
+                  {aiStatus.url && (
+                    <div className="ai-status-details">
+                      <p><strong>URL:</strong> {aiStatus.url}</p>
+                      {aiStatus.error && (
+                        <p className="ai-error-detail"><strong>Hata:</strong> {aiStatus.error}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="ai-status-info">
+                  <p>Durum bilgisi yok. Lütfen "Yenile" butonuna tıklayın.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Test Butonu */}
+            <div className="ai-test-section">
+              <h3>Test</h3>
+              <p>AI servisinin öneri fonksiyonunu test edin.</p>
+              <button 
+                className="btn btn-primary"
+                onClick={testRecommendation}
+                disabled={!aiStatus || aiStatus.status !== 'online'}
+              >
+                Test Önerisi Al
+              </button>
+            </div>
+
+            {/* Hatalar Listesi */}
+            {aiErrors.length > 0 && (
+              <div className="ai-errors-section">
+                <div className="section-header">
+                  <h3>
+                    <AlertCircle size={20} />
+                    Hatalar ({aiErrors.length})
+                  </h3>
+                  <button 
+                    className="btn btn-secondary"
+                    onClick={() => setAiErrors([])}
+                  >
+                    Temizle
+                  </button>
+                </div>
+                <div className="ai-errors-list">
+                  {aiErrors.map((error, index) => (
+                    <div key={index} className="ai-error-item">
+                      <div className="ai-error-header">
+                        <span className="ai-error-time">{error.timestamp}</span>
+                        <span className={`ai-error-status ${error.status}`}>
+                          {error.status === 'offline' ? 'Çalışmıyor' : 
+                           error.status === 'error' ? 'Hata' : 'Bilinmeyen'}
+                        </span>
+                      </div>
+                      <p className="ai-error-message">{error.message}</p>
+                      {error.error && (
+                        <p className="ai-error-detail">{error.error}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

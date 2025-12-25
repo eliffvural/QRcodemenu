@@ -5,13 +5,13 @@ exports.createRestaurant = async (req, res) => {
   try {
     const restaurantData = req.body;
     
-    // Logo dosyası varsa ekle
-    if (req.file) {
-      restaurantData.logo = `/uploads/${req.file.filename}`;
+    // Logo dosyası varsa ekle (upload.fields kullanıldığı için req.files üzerinden okunur)
+    if (req.files && req.files.logo && Array.isArray(req.files.logo) && req.files.logo[0]) {
+      restaurantData.logo = `/uploads/${req.files.logo[0].filename}`;
     }
     
     // Kapak fotoğrafı varsa ekle
-    if (req.files && req.files.coverImage) {
+    if (req.files && req.files.coverImage && Array.isArray(req.files.coverImage) && req.files.coverImage[0]) {
       restaurantData.coverImage = `/uploads/${req.files.coverImage[0].filename}`;
     }
 
@@ -83,17 +83,17 @@ exports.updateRestaurant = async (req, res) => {
   try {
     console.log('Restaurant güncelleme isteği:', req.params.id);
     console.log('Gelen veriler:', req.body);
-    console.log('Dosya:', req.file);
+    console.log('Dosyalar:', req.files);
     
     const updateData = req.body;
     
-    // Logo dosyası varsa ekle
-    if (req.file) {
-      updateData.logo = `/uploads/${req.file.filename}`;
+    // Logo dosyası varsa ekle (upload.fields kullanıldığı için req.files üzerinden okunur)
+    if (req.files && req.files.logo && Array.isArray(req.files.logo) && req.files.logo[0]) {
+      updateData.logo = `/uploads/${req.files.logo[0].filename}`;
     }
     
     // Kapak fotoğrafı varsa ekle
-    if (req.files && req.files.coverImage) {
+    if (req.files && req.files.coverImage && Array.isArray(req.files.coverImage) && req.files.coverImage[0]) {
       updateData.coverImage = `/uploads/${req.files.coverImage[0].filename}`;
     }
 

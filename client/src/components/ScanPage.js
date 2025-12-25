@@ -1,3 +1,4 @@
+import { Html5Qrcode } from 'html5-qrcode';
 import { QrCode, RefreshCw } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -13,11 +14,6 @@ function ScanPage() {
     const startScanner = async () => {
       try {
         setError('');
-        if (!window.Html5Qrcode) {
-          setError('Tarayıcı kütüphanesi yüklenemedi.');
-          return;
-        }
-
         const id = 'qr-reader';
         if (!scannerRef.current) return;
         if (!document.getElementById(id)) {
@@ -26,7 +22,7 @@ function ScanPage() {
           scannerRef.current.appendChild(div);
         }
 
-        html5Qrcode = new window.Html5Qrcode(id);
+        html5Qrcode = new Html5Qrcode(id);
         setIsReady(true);
 
         await html5Qrcode.start(
@@ -97,6 +93,7 @@ function ScanPage() {
 }
 
 export default ScanPage;
+
 
 
 
